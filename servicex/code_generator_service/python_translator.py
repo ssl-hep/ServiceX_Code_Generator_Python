@@ -31,6 +31,7 @@ from collections import namedtuple
 from tempfile import TemporaryDirectory
 import base64
 
+
 GeneratedFileResult = namedtuple('GeneratedFileResult', 'hash output_dir')
 
 
@@ -44,7 +45,7 @@ class GenerateCodeException(BaseException):
 class PythonTranslator:
     def __init__(self):
         pass
-
+    
     def zipdir(self, path: str, zip_handle: zipfile.ZipFile) -> None:
         """Given a `path` to a directory, zip up its contents into a zip file.
         Arguments:
@@ -71,9 +72,13 @@ class PythonTranslator:
         with open(os.path.join(query_file_path, 'generated_transformer.py'), 'w') as python_file:
             python_file.write(src)
 
+        transform_assist = open('watch.sh', 'r').read()
+        with open(os.path.join(query_file_path, 'watch.sh'), 'w') as assist_file:
+            assist_file.write(transform_assist)
+
         os.system("ls -lht " + query_file_path)
         return GeneratedFileResult(hash, query_file_path)
-
+    
     def translate_text_python_to_zip(self, code: str) -> bytes:
         """Translate a text python into a zip file as a memory stream
 
