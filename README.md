@@ -44,3 +44,7 @@ if __name__ == "__main__":
     r = ds.get_data_pandas_df(encoded_selection)
     print(r)
 ```
+
+### Sidecar changes
+
+The sidecar branch adds scripts/watch.sh to /generated. This script enables a science image to waiti for a transform request and submit the science code without having to include ServiceX code within a transform function/image.
