@@ -78,7 +78,7 @@ class PythonTranslator:
 
         os.system("ls -lht " + query_file_path)
         return GeneratedFileResult(hash, query_file_path)
- 
+        
     def translate_text_python_to_zip(self, code: str) -> bytes:
         """Translate a text python into a zip file as a memory stream
 
