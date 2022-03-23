@@ -45,7 +45,7 @@ class GenerateCodeException(BaseException):
 class PythonTranslator:
     def __init__(self):
         pass
-    
+
     def zipdir(self, path: str, zip_handle: zipfile.ZipFile) -> None:
         """Given a `path` to a directory, zip up its contents into a zip file.
         Arguments:
