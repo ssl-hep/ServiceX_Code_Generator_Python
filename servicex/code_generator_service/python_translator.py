@@ -72,10 +72,6 @@ class PythonTranslator:
         with open(os.path.join(query_file_path, 'generated_transformer.py'), 'w') as python_file:
             python_file.write(src)
 
-        transform_assist = open('watch.sh', 'r').read()
-        with open(os.path.join(query_file_path, 'watch.sh'), 'w') as assist_file:
-            assist_file.write(transform_assist)
-
         os.system("ls -lht " + query_file_path)
         return GeneratedFileResult(hash, query_file_path)
 
