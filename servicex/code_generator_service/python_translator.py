@@ -25,47 +25,30 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import os
-import zipfile
-from collections import namedtuple
-from tempfile import TemporaryDirectory
 import base64
+import hashlib
+import os
 
-GeneratedFileResult = namedtuple('GeneratedFileResult', 'hash output_dir')
-
-
-class GenerateCodeException(BaseException):
-    """Custom exception for top level code generation exceptions"""
-
-    def __init__(self, message: str):
-        BaseException.__init__(self, message)
+from servicex_codegen.code_generator import CodeGenerator, GeneratedFileResult
 
 
-class PythonTranslator:
-    def __init__(self):
-        pass
-
-    def zipdir(self, path: str, zip_handle: zipfile.ZipFile) -> None:
-        """Given a `path` to a directory, zip up its contents into a zip file.
-        Arguments:
-            path        Path to a local directory. The contents will be put into the zip file
-            zip_handle  The zip file handle to write into.
-        """
-        for root, _, files in os.walk(path):
-            for file in files:
-                zip_handle.write(os.path.join(root, file), file)
+class PythonTranslator(CodeGenerator):
 
     # Generate the code. Ignoring caching for now
-    def get_generated_python(self, a, cache_path: str):
-        import hashlib
-        hash = hashlib.md5(a).hexdigest()
+    def generate_code(self, query, cache_path: str):
+
+        # Hashlib doesn't work with unicode strings
+        if type(query) == str:
+            query = query.encode('utf-8')
+
+        hash = hashlib.md5(query).hexdigest()
         query_file_path = os.path.join(cache_path, hash)
 
         # Create the files to run in that location.
         if not os.path.exists(query_file_path):
             os.makedirs(query_file_path)
 
-        message_bytes = base64.b64decode(a)
+        message_bytes = base64.b64decode(query)
         src = message_bytes.decode('ascii')
 
         with open(os.path.join(query_file_path, 'generated_transformer.py'), 'w') as python_file:
@@ -73,29 +56,3 @@ class PythonTranslator:
 
         os.system("ls -lht " + query_file_path)
         return GeneratedFileResult(hash, query_file_path)
-
-    def translate_text_python_to_zip(self, code: str) -> bytes:
-        """Translate a text python into a zip file as a memory stream
-
-        Arguments:
-            code            Text `python` function
-
-        Returns
-            bytes       Data that if written as a binary output would be a zip file.
-        """
-
-        if len(code) == 0:
-            raise GenerateCodeException("Requested codegen for an empty string.")
-
-        # Generate the python code
-        with TemporaryDirectory() as tempdir:
-            # Zip up everything in the directory - we are going to ship it as back as part
-            # of the message.
-            r = self.get_generated_python(code, tempdir)
-            z_filename = os.path.join(str(tempdir), 'joined.zip')
-            zip_h = zipfile.ZipFile(z_filename, 'w', zipfile.ZIP_DEFLATED)
-            self.zipdir(r.output_dir, zip_h)
-            zip_h.close()
-
-            with open(z_filename, 'rb') as b_in:
-                return b_in.read()
